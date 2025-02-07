@@ -60,6 +60,20 @@ public class Alumnado {
 		}
 	}
 
+	public Alumnado(String nombre,String apellidos,String fechaNac){
+		if(nombre != null && !nombre.isEmpty()) {
+			this.nombre = nombre;
+		}
+		
+		if(apellidos != null && !apellidos.isEmpty()) {
+			this.apellidos = apellidos;
+		}
+		
+		if(fechaNac != null && !fechaNac.isEmpty()) {
+			this.fechaNac = fechaNac;
+		}
+	}
+
 	public int getIdAlumnado() {
 		return idAlumnado;
 	}
