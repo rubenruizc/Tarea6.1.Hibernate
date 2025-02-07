@@ -4,7 +4,8 @@ import java.util.Scanner;
 
 import dal.Accesobd;
 import ent.Alumnado;
-import ent.EntidadPersona;
+import ent.Matricula;
+import ent.Profesores;
 
 public class Principal {
     private static Accesobd instancia;
@@ -43,7 +44,7 @@ public class Principal {
             }
             
 
-        } while (opcion != 6);
+        } while (opcion != 4);
     }
 
     private static void menu(){
@@ -77,12 +78,12 @@ public class Principal {
                     try {
                         List<Alumnado> listaAlumnados = instancia.listar("getAllAlumnados");
 
-                        if(!listaAlumnados.isEmpty()){
+                        if(!listaAlumnados.isEmpty() && listaAlumnados != null){
                             for (Alumnado alumnado : listaAlumnados) {
-                                System.out.println("Id" + alumnado.getIdAlumnado() +
-                                    "Nombre" + alumnado.getNombre() + 
-                                " Apellidos" + alumnado.getApellidos() + 
-                                " Fecha de nacimiento" + alumnado.getFechaNac());
+                                System.out.println("Id: " + alumnado.getIdAlumnado() +
+                                    "\nNombre: " + alumnado.getNombre() + 
+                                "\nApellidos: " + alumnado.getApellidos() + 
+                                "\nFecha de nacimiento: " + alumnado.getFechaNac());
                             }
                         } else {
                             System.out.println("No se ha encontrado a ningún alumno");

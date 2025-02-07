@@ -13,8 +13,8 @@ import javax.persistence.NamedQuery;
 
 @NamedQueries({
     @NamedQuery(
-        name="getAllCompras",
-        query="from Compra"
+        name="getAllMatricula",
+        query="from Matricula"
     ),
     @NamedQuery(
         name="getMatriculaById",

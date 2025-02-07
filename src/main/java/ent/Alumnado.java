@@ -13,7 +13,7 @@ import javax.persistence.NamedQuery;
     @NamedQuery(
         name = "getAllAlumnados", 
         query = "from Alumnado"
-    ),
+    ), 
     @NamedQuery(
       name = "getAlumnadoById",
       query = "from Alumnado where idAlumnado = :id"  
@@ -26,7 +26,7 @@ public class Alumnado {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idAlumnado")
+    @Column(name = "IdAlumnado")
 	private int idAlumnado;
 	
     @Column(name = "nombre")
