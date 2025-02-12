@@ -72,6 +72,29 @@ public class Matricula implements Serializable {
 		
 	}
 
+	public Matricula(int idProfesorado,int idAlumnado,String asignatura,int curso) {
+		
+		
+		if(idProfesorado > 0) {
+			this.idProfesorado = idProfesorado;
+		}
+		
+		if(idAlumnado > 0) {
+			this.idAlumnado = idAlumnado;
+		}
+		
+		if(asignatura != null && !asignatura.isEmpty()) {
+			this.asignatura = asignatura;
+		}
+		
+		if(curso > 0) {
+			this.curso = curso;
+		}
+		
+		
+		
+	}
+
 	public int getIdMatricula() {
 		return idMatricula;
 	}
