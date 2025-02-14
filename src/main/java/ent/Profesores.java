@@ -1,5 +1,8 @@
 package ent;
 
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -8,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 
 @NamedQueries({
 
@@ -46,7 +50,10 @@ public class Profesores {
 	
     @Column(name = "antiguedad")
 	private int antiguedad;
-	
+
+	// @OneToMany(mappedBy = "profesor", cascade = CascadeType.ALL)
+	// private List<Matricula> matricula;
+
 	public Profesores() {
 		
 	}

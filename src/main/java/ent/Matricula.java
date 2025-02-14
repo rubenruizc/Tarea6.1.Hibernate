@@ -7,7 +7,12 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.ManyToAny;
+
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
@@ -42,6 +47,16 @@ public class Matricula implements Serializable {
 	
     @Column(name = "curso")
 	private int curso;
+
+	// @ManyToOne
+	// @JoinColumn(name = "idAlumnado",nullable = false,insertable = false,updatable = false)
+	// private Alumnado alumno;
+
+	// @ManyToOne
+	// @JoinColumn(name = "idProfesorado",nullable = false,insertable = false,updatable = false)
+	// private Profesores profesor;
+
+	
 	
 	public Matricula() {
 		

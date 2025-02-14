@@ -127,4 +127,70 @@ public class Accesobd {
     public void actualizar(Object cosa) {
         sesion.update(cosa);
     }
+
+    public void ejecutarDropTable(String nombreTabla) {
+        String hql = "DROP TABLE " + nombreTabla;
+        System.out.println("Ejecutando: " + hql);
+        sesion.createNativeQuery(hql).executeUpdate();
+        sesion.flush();
+    }
+
+    public void borrarTodasLasTablasConDependencias() {
+        try {
+            // Borrar primero las entidades que dependen de otras (por ejemplo, Matricula depende de Alumnado)
+            ejecutarDropTable("Matricula");  // Primero, borrar registros de la tabla "Matricula"
+            ejecutarDropTable("Alumnado");   // Luego, borrar registros de la tabla "Alumnado"
+            ejecutarDropTable("Profesores");   // Finalmente, borrar registros de la tabla "Profesor"
+            
+            // Asegurarse de que los cambios se escriban en la base de datos
+            sesion.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error al borrar todas las tablas con dependencias", e);
+        }
+    }
+
+    public void ejecutarDeleteTable(String entidad) {
+        String hql = "DELETE FROM " + entidad;
+        sesion.createQuery(hql).executeUpdate();
+        sesion.flush();
+    }
+
+    public void ejecutarCrearTableAlumnado() {
+        String sql = "CREATE TABLE Alumnado" + " ("
+                    + "idAlumnado INT PRIMARY KEY, "
+                    + "nombre VARCHAR(255), "
+                    + "apellidos VARCHAR(255), "
+                    + "fechaNac DATE)";
+        sesion.createQuery(sql).executeUpdate();
+        sesion.flush();
+    }
+
+    public void ejecutarCrearTableProfesores() {
+        String sql = "CREATE TABLE Profesores" + " ("
+                    + "idProfesor INT AUTO_INCREMENT PRIMARY KEY, "
+                    + "nombre VARCHAR(255), "
+                    + "apellidos VARCHAR(255), "
+                    + "fechaNac DATE, "
+                    + "antiguedad INT)";
+        sesion.createQuery(sql).executeUpdate();
+        sesion.flush();
+    }
+
+    public void ejecutarCrearTableMatricula() {
+        String sql = "CREATE TABLE Matricula" + " ("
+                    + "idMatricula INT AUTO_INCREMENT PRIMARY KEY, "
+                    + "idProfesorado INT, "
+                    + "idAlumnado INT, "
+                    + "asignatura VARCHAR(255), "
+                    + "curso INT)";
+        sesion.createQuery(sql).executeUpdate();
+        sesion.flush();
+    }
+    
+    
+    
+
+    
+
 }

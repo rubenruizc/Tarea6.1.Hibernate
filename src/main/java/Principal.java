@@ -16,6 +16,10 @@ public class Principal {
         java.util.logging.Logger.getLogger("org.hibernate").setLevel(Level.SEVERE);
         instancia = new Accesobd();
 
+        instancia.ejecutarCrearTableAlumnado();
+        instancia.ejecutarCrearTableProfesores();
+        instancia.ejecutarCrearTableMatricula();
+
         int opcion = 0;
 
         do {
@@ -56,22 +60,116 @@ public class Principal {
                     break;
 
                 case 4:
+                    sc.nextLine();
+
+                    try {
+                        String tablaBorrar = "";
+
+                        int opcionTablaBorrar;
+
+                        System.out.println("Que tabla quiere borrar" + "\n1.Alumnado" +"\n2.Profesores" + "\n3.Matricula");
+                        
+                        opcionTablaBorrar = sc.nextInt();
+
+                        sc.nextLine();
+
+                        switch(opcionTablaBorrar){
+                            case 1:
+                                tablaBorrar = "Alumnado";
+                                break;
+
+                            case 2:
+                                tablaBorrar = "Profesores";
+                                break;
+
+                            case 3:
+                                tablaBorrar = "Matricula";
+                                break;
+                        }
+                    
+                        ejecutarDropTable(tablaBorrar);
+
+                        System.out.println("Tabla borrada correctamente\n");
+
+                    } catch (Exception e) {
+                        System.out.println("Ha ocurrido un error al borrar la tabla\n");
+                    }
+                    
+                
+                    break;
+
+                case 5:
+
+                    sc.nextLine();
+
+                    try {
+                        String datosBorrar= "";
+                        int opcionDatosBorrar ;
+
+                        System.out.println("Que tabla quiere borrar" + "\n1.Alumnado" +"\n2.Profesores" + "\n3.Matricula");
+
+                        opcionDatosBorrar = sc.nextInt();
+
+                        sc.nextLine();
+
+                        switch(opcionDatosBorrar){
+                            case 1:
+                                datosBorrar = "Alumnado";
+                                break;
+
+                            case 2:
+                                datosBorrar = "Profesores";
+                                break;
+
+                            case 3:
+                                datosBorrar = "Matricula";
+                                break;
+                        }
+                        
+                    
+                        ejecutarDeleteTable(datosBorrar);
+                        
+
+
+                        System.out.println("Datos borrados correctamente\n");
+                    } catch (Exception e) {
+                        System.out.println("Ha ocurrido un error al borrar los datos de la tabla\n");
+                    }
+                    
+                    break;
+
+                case 6:
+
+                    try {
+                        ejecutarDropTodasLasTablas();    
+
+                        System.out.println("Todas las tablas borradas con éxito\n");
+
+                    } catch (Exception e) {
+                        System.out.println("Ha ocurrido un error al intentar borrar todas las tablas\n");
+                    }
+                       
+
+                    break;
+
+                case 7:
                     break;
             }
             
 
-        } while (opcion != 4);
+        } while (opcion != 7);
     }
 
     private static void menu(){
             System.out.println("Que entidad desea escoger?");
             System.out.println("1. Alumnado");
             System.out.println("2. Profesorado");
-            System.out.println("3. Matrícula");
-            System.out.println("4. Salir");
-    }
-
-    
+            System.out.println("3. matricula");
+            System.out.println("4. Borrar Tabla");
+            System.out.println("5. Borrar Todos los datos de una tabla");
+            System.out.println("6. Borrar todas las tablas");
+            System.out.println("7. Salir");
+    }  
 
     private static void opcionesAlumnado(int opcion) throws Exception {
         
@@ -205,6 +303,7 @@ public class Principal {
                     }
                 } catch (Exception e) {
                     System.out.println("Ha habido un error al borrar el alumno\n");
+                    System.out.println(e.getCause());
                 }
                     break;
 
@@ -555,6 +654,7 @@ public class Principal {
             System.out.println(e.getMessage());
         }
     }
+    
     private static void menuAlumnado(){
 
         System.out.println("Que le gustaría hacer en la entidad ALUMNADO?");
@@ -588,11 +688,10 @@ public class Principal {
 
     }
 
-
-
     private static void guardar(Object cosa) throws Exception {
         instancia.abrir();
         int id = (int) instancia.guardar(cosa);
+        // System.out.println("El id generado es: " + id);
         instancia.cerrar();
     }
 
@@ -608,11 +707,35 @@ public class Principal {
         instancia.cerrar();
     }
 
+
+    private static void ejecutarDropTable(String entidad) throws Exception{
+        instancia.abrir();
+
+        instancia.ejecutarDropTable(entidad);
+
+        instancia.cerrar();
+
+
+    }
+    
+     private static void ejecutarDeleteTable(String entidad) throws Exception{
+         instancia.abrir();
+
+        instancia.ejecutarDeleteTable(entidad);
+
+        instancia.cerrar();
+     }
+
     
 
-    
+    private static void ejecutarDropTodasLasTablas() throws Exception{
+        instancia.abrir();
+
+        instancia.borrarTodasLasTablasConDependencias();
+
+        instancia.cerrar();
 
 
+    }
 
-    
 }
