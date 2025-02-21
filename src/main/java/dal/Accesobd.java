@@ -157,40 +157,51 @@ public class Accesobd {
     }
 
     public void ejecutarCrearTableAlumnado() {
-        String sql = "CREATE TABLE Alumnado" + " ("
-                    + "idAlumnado INT PRIMARY KEY, "
-                    + "nombre VARCHAR(255), "
-                    + "apellidos VARCHAR(255), "
-                    + "fechaNac DATE)";
-        sesion.createQuery(sql).executeUpdate();
-        sesion.flush();
+        String sql = "CREATE TABLE IF NOT EXISTS Alumnado ("
+                + "idAlumnado INT PRIMARY KEY, "
+                + "nombre VARCHAR(255), "
+                + "apellidos VARCHAR(255), "
+                + "fechaNac DATE)";
+
+        ejecutarSQL(sql);
     }
 
     public void ejecutarCrearTableProfesores() {
-        String sql = "CREATE TABLE Profesores" + " ("
-                    + "idProfesor INT AUTO_INCREMENT PRIMARY KEY, "
-                    + "nombre VARCHAR(255), "
-                    + "apellidos VARCHAR(255), "
-                    + "fechaNac DATE, "
-                    + "antiguedad INT)";
-        sesion.createQuery(sql).executeUpdate();
-        sesion.flush();
+        String sql = "CREATE TABLE IF NOT EXISTS Profesores ("
+                + "idProfesor INT AUTO_INCREMENT PRIMARY KEY, "
+                + "nombre VARCHAR(255), "
+                + "apellidos VARCHAR(255), "
+                + "fechaNac DATE, "
+                + "antiguedad INT)";
+
+        ejecutarSQL(sql);
     }
 
     public void ejecutarCrearTableMatricula() {
-        String sql = "CREATE TABLE Matricula" + " ("
-                    + "idMatricula INT AUTO_INCREMENT PRIMARY KEY, "
-                    + "idProfesorado INT, "
-                    + "idAlumnado INT, "
-                    + "asignatura VARCHAR(255), "
-                    + "curso INT)";
-        sesion.createQuery(sql).executeUpdate();
-        sesion.flush();
-    }
-    
-    
-    
+        String sql = "CREATE TABLE IF NOT EXISTS Matricula ("
+                + "idMatricula INT AUTO_INCREMENT PRIMARY KEY, "
+                + "idProfesor INT, "
+                + "idAlumnado INT, "
+                + "asignatura VARCHAR(255), "
+                + "curso INT, "
+                + "FOREIGN KEY (idProfesor) REFERENCES Profesores(idProfesor), "
+                + "FOREIGN KEY (idAlumnado) REFERENCES Alumnado(idAlumnado))";
 
-    
+        ejecutarSQL(sql);
+    }
+
+    private void ejecutarSQL(String sql) {
+        Transaction tx = null;
+        try {
+            tx = sesion.beginTransaction();
+            sesion.createNativeQuery(sql).executeUpdate();
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        }
+    }
 
 }
