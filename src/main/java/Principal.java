@@ -89,7 +89,7 @@ public class Principal {
                     
                         ejecutarDropTable(tablaBorrar);
 
-                        System.out.println("Tabla borrada correctamente\n");
+                        //System.out.println("Tabla borrada correctamente\n");
 
                     } catch (Exception e) {
                         System.out.println("Ha ocurrido un error al borrar la tabla\n");
@@ -153,24 +153,71 @@ public class Principal {
 
                     break;
 
-                case 7:
+                    case 7: // Crear todas las tablas
+                    try {
+                        instancia.ejecutarCrearTableAlumnado();
+                        instancia.ejecutarCrearTableProfesores();
+                        instancia.ejecutarCrearTableMatricula();
+                        System.out.println("Todas las tablas han sido creadas con éxito\n");
+                    } catch (Exception e) {
+                        System.out.println("Ha ocurrido un error al crear las tablas: " + e.getMessage() + "\n");
+                    }
+                    break;
+    
+                case 8: // Crear una tabla específica
+                    sc.nextLine(); // Limpiar buffer
+                    try {
+                        System.out.println("¿Qué tabla desea crear?");
+                        System.out.println("1. Alumnado");
+                        System.out.println("2. Profesores");
+                        System.out.println("3. Matricula");
+                        int opcionTabla = sc.nextInt();
+    
+                        switch (opcionTabla) {
+                            case 1:
+                                instancia.ejecutarCrearTableAlumnado();
+                                System.out.println("Tabla Alumnado creada con éxito\n");
+                                break;
+                            case 2:
+                                instancia.ejecutarCrearTableProfesores();
+                                System.out.println("Tabla Profesores creada con éxito\n");
+                                break;
+                            case 3:
+                                instancia.ejecutarCrearTableMatricula();
+                                System.out.println("Tabla Matricula creada con éxito\n");
+                                break;
+                            default:
+                                System.out.println("Opción no válida\n");
+                                break;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Ha ocurrido un error al crear la tabla: " + e.getMessage() + "\n");
+                    }
+                    break;
+    
+                case 9: // Salir
+                    System.out.println("Saliendo del programa...\n");
+                    break;
+    
+                default:
+                    System.out.println("Opción no válida, por favor seleccione una opción entre 1 y 9\n");
                     break;
             }
-            
-
-        } while (opcion != 7);
+        } while (opcion != 9); 
     }
 
-    private static void menu(){
-            System.out.println("Que entidad desea escoger?");
-            System.out.println("1. Alumnado");
-            System.out.println("2. Profesorado");
-            System.out.println("3. matricula");
-            System.out.println("4. Borrar Tabla");
-            System.out.println("5. Borrar Todos los datos de una tabla");
-            System.out.println("6. Borrar todas las tablas");
-            System.out.println("7. Salir");
-    }  
+    private static void menu() {
+        System.out.println("¿Qué entidad desea escoger?");
+        System.out.println("1. Alumnado");
+        System.out.println("2. Profesorado");
+        System.out.println("3. Matricula");
+        System.out.println("4. Borrar Tabla");
+        System.out.println("5. Borrar Todos los datos de una tabla");
+        System.out.println("6. Borrar todas las tablas");
+        System.out.println("7. Crear todas las tablas");
+        System.out.println("8. Crear una tabla específica");
+        System.out.println("9. Salir");
+    }
 
     private static void opcionesAlumnado(int opcion) throws Exception {
         
@@ -283,29 +330,51 @@ public class Principal {
                     break;
 
                 case 5:
-                try {
-                    String elegirBorrar = "";
-
-                    System.out.println("Introduzca el id del alumno a borrar");
-                    int idBorrar = sc.nextInt();
-                    sc.nextLine();
-
-                    Alumnado alumnado3 = (Alumnado) instancia.obtenerPorId("getAlumnadoById",idBorrar);
-
-                    System.out.println("Alumno a borrar: " + "\nNombre:" + alumnado3.getNombre() + "\nApellido:" + alumnado3.getApellidos() + "\nFecha de nacimiento:" + alumnado3.getFechaNac() + "\n");
-                    System.out.println("¿Desea borrar este alumno?");
-                    elegirBorrar = sc.nextLine();
-
-                    if(elegirBorrar.equalsIgnoreCase("si")){
-                        borrar(alumnado3);
-                        System.out.println("Alumno borrado con éxito\n");
-                    } else {
-                        System.out.println("Alumno no borrado\n");
+                    try {
+                        String elegirBorrar = "";
+                        System.out.println("Introduzca el id del alumno a borrar");
+                        int idBorrar = sc.nextInt();
+                        sc.nextLine();
+                
+                        Alumnado alumnado3 = (Alumnado) instancia.obtenerPorId("getAlumnadoById", idBorrar);
+                        if (alumnado3 == null) {
+                            System.out.println("No se ha encontrado a ningún alumno con ese ID\n");
+                            break;
+                        }
+                
+                        System.out.println("Alumno a borrar: " + 
+                                           "\nNombre: " + alumnado3.getNombre() + 
+                                           "\nApellido: " + alumnado3.getApellidos() + 
+                                           "\nFecha de nacimiento: " + alumnado3.getFechaNac() + "\n");
+                
+                        // Consultar matrículas asociadas
+                        List<Matricula> matriculasAsociadas = instancia.obtenerMatriculasPorAlumno(idBorrar);
+                        if (!matriculasAsociadas.isEmpty()) {
+                            System.out.println("Al borrar este alumno, se eliminarán las siguientes matrículas:");
+                            for (Matricula matricula : matriculasAsociadas) {
+                                System.out.println("Id Matrícula: " + matricula.getIdMatricula() +
+                                                   "   Id Profesor: " + matricula.getIdProfesorado() +
+                                                   "   Id Alumno: " + matricula.getIdAlumnado() +
+                                                   "   Asignatura: " + matricula.getAsignatura() +
+                                                   "   Curso: " + matricula.getCurso() + "\n");
+                            }
+                        } else {
+                            System.out.println("Este alumno no tiene matrículas asociadas.\n");
+                        }
+                
+                        System.out.println("¿Desea borrar este alumno?");
+                        elegirBorrar = sc.nextLine();
+                
+                        if (elegirBorrar.equalsIgnoreCase("si")) {
+                            borrar(alumnado3);
+                            System.out.println("Alumno y matrículas asociadas borrados con éxito\n");
+                        } else {
+                            System.out.println("Alumno no borrado\n");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Ha habido un error al borrar el alumno\n");
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    System.out.println("Ha habido un error al borrar el alumno\n");
-                    System.out.println(e.getCause());
-                }
                     break;
 
                 case 6:
@@ -446,33 +515,52 @@ public class Principal {
                     break;
 
                 case 5:
-                try {
-                    String elegirBorrar = "";
-
-                    System.out.println("Introduzca el id del profesor a borrar");
-                    int idBorrar = sc.nextInt();
-                    sc.nextLine();
-
-                    Profesores profesor3 = (Profesores) instancia.obtenerPorId("getProfesorById",idBorrar);
-
-                    System.out.println("Profesor a borrar: " + 
-                    "\nNombre:" + profesor3.getNombre() + 
-                    "\nApellido:" + profesor3.getApellidos() + 
-                    "\nFecha de nacimiento:" + profesor3.getFechaNac() + 
-                    "\nAntiguedad:" + profesor3.getAntiguedad() +
-                    "\n");
-                    System.out.println("¿Desea borrar este profesor?");
-                    elegirBorrar = sc.nextLine();
-
-                    if(elegirBorrar.equalsIgnoreCase("si")){
-                        borrar(profesor3);
-                        System.out.println("Profesor borrado con éxito\n");
-                    } else {
-                        System.out.println("Profesor no borrado\n");
+                    try {
+                        String elegirBorrar = "";
+                        System.out.println("Introduzca el id del profesor a borrar");
+                        int idBorrar = sc.nextInt();
+                        sc.nextLine();
+                
+                        Profesores profesor3 = (Profesores) instancia.obtenerPorId("getProfesorById", idBorrar);
+                        if (profesor3 == null) {
+                            System.out.println("No se ha encontrado a ningún profesor con ese ID\n");
+                            break;
+                        }
+                
+                        System.out.println("Profesor a borrar: " + 
+                                           "\nNombre: " + profesor3.getNombre() + 
+                                           "\nApellido: " + profesor3.getApellidos() + 
+                                           "\nFecha de nacimiento: " + profesor3.getFechaNac() + 
+                                           "\nAntigüedad: " + profesor3.getAntiguedad() + "\n");
+                
+                        // Consultar matrículas asociadas
+                        List<Matricula> matriculasAsociadas = instancia.obtenerMatriculasPorProfesor(idBorrar);
+                        if (!matriculasAsociadas.isEmpty()) {
+                            System.out.println("Al borrar este profesor, se eliminarán las siguientes matrículas:");
+                            for (Matricula matricula : matriculasAsociadas) {
+                                System.out.println("Id Matrícula: " + matricula.getIdMatricula() +
+                                                   "   Id Profesor: " + matricula.getIdProfesorado() +
+                                                   "   Id Alumno: " + matricula.getIdAlumnado() +
+                                                   "   Asignatura: " + matricula.getAsignatura() +
+                                                   "   Curso: " + matricula.getCurso() + "\n");
+                            }
+                        } else {
+                            System.out.println("Este profesor no tiene matrículas asociadas.\n");
+                        }
+                
+                        System.out.println("¿Desea borrar este profesor?");
+                        elegirBorrar = sc.nextLine();
+                
+                        if (elegirBorrar.equalsIgnoreCase("si")) {
+                            borrar(profesor3);
+                            System.out.println("Profesor y matrículas asociadas borrados con éxito\n");
+                        } else {
+                            System.out.println("Profesor no borrado\n");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Ha habido un error al borrar el profesor\n");
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    System.out.println("Ha habido un error al borrar el profesor\n");
-                }
                     break;
 
                 case 6:
@@ -704,11 +792,11 @@ public class Principal {
 
     private static void menuProfesorado(){
         System.out.println("Que le gustaría hacer en la entidad PROFESORADO?");
-        System.out.println("1.Ver el listado completo de profesorado");
-        System.out.println("2.Buscar profesorado por ID");
-        System.out.println("3.Guardar un profesorado");
-        System.out.println("4.Modificar un profesorado");
-        System.out.println("5.Borrar un profesorado");
+        System.out.println("1.Ver el listado completo de profesores");
+        System.out.println("2.Buscar profesor por ID");
+        System.out.println("3.Guardar un profesor");
+        System.out.println("4.Modificar un profesor");
+        System.out.println("5.Borrar un profesor");
         System.out.println("6.Volver al menú principal");
     }
 

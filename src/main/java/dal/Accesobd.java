@@ -1,4 +1,5 @@
 package dal;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.TypedQuery;
@@ -209,7 +210,9 @@ public class Accesobd {
             System.out.println("Ejecutando: " + hql);
             sesion.createNativeQuery(hql).executeUpdate();
             transaction.commit();
+            System.out.println("Tabla borrada correctamente\n");
             sesion.flush();
+            
             
         } catch (Exception e) {
             if(transaction != null && transaction.isActive()){
@@ -239,9 +242,24 @@ public class Accesobd {
     
 
     public void ejecutarDeleteTable(String entidad) {
-        String hql = "DELETE FROM " + entidad;
-        sesion.createQuery(hql).executeUpdate();
-        sesion.flush();
+        try {
+            abrir(); // Asegurar que la sesión está abierta
+            transaction = sesion.beginTransaction(); // Iniciar transacción
+    
+            String hql = "DELETE FROM " + entidad;
+            int filasAfectadas = sesion.createQuery(hql).executeUpdate();
+            
+            transaction.commit(); // Confirmar los cambios
+            System.out.println("Se han eliminado " + filasAfectadas + " registros de la tabla " + entidad);
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback(); // Revertir en caso de error
+            }
+            System.out.println("Error al eliminar los datos de la tabla " + entidad + ": " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            cerrar(); // Cerrar la sesión siempre
+        }
     }
 
     public void ejecutarCrearTableAlumnado() {
@@ -401,7 +419,39 @@ public class Accesobd {
             cerrar(); // Cerrar la sesión
         }
     }
-    
+
+    // Método para obtener matrículas por ID de alumno
+    public List<Matricula> obtenerMatriculasPorAlumno(int idAlumnado) {
+        try {
+            abrir();
+            String hql = "FROM Matricula m WHERE m.idAlumnado = :idAlumnado";
+            TypedQuery<Matricula> query = sesion.createQuery(hql, Matricula.class);
+            query.setParameter("idAlumnado", idAlumnado);
+            List<Matricula> matriculas = query.getResultList();
+            cerrar();
+            return matriculas;
+        } catch (Exception e) {
+            if (sesion != null && sesion.isOpen()) cerrar();
+            return new ArrayList<>(); // Retorna lista vacía si hay error o no hay resultados
+        }
+    }
+
+    // Método para obtener matrículas por ID de profesor
+    public List<Matricula> obtenerMatriculasPorProfesor(int idProfesor) {
+        try {
+            abrir();
+            String hql = "FROM Matricula m WHERE m.idProfesorado = :idProfesor";
+            TypedQuery<Matricula> query = sesion.createQuery(hql, Matricula.class);
+            query.setParameter("idProfesor", idProfesor);
+            List<Matricula> matriculas = query.getResultList();
+            cerrar();
+            return matriculas;
+        } catch (Exception e) {
+            if (sesion != null && sesion.isOpen()) cerrar();
+            return new ArrayList<>(); // Retorna lista vacía si hay error o no hay resultados
+        }
+    }
+        
 
 
 }
