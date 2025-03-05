@@ -36,7 +36,7 @@ public class Matricula implements Serializable {
     @Column(name = "idMatricula")
 	private int idMatricula;
 
-    @Column(name = "idProfesorado")
+    @Column(name = "idProfesor")
 	private int idProfesorado;
 	
     @Column(name = "idAlumnado")

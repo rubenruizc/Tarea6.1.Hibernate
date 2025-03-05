@@ -93,6 +93,7 @@ public class Principal {
 
                     } catch (Exception e) {
                         System.out.println("Ha ocurrido un error al borrar la tabla\n");
+                        System.out.println(e.getMessage());
                     }
                     
                 
@@ -485,173 +486,168 @@ public class Principal {
 
 
     private static void opcionesMatricula(int opcion) throws Exception {
-        
-        
-        try {
-            instancia.abrir(); 
-            
-            switch (opcion) {
-                case 1 :
-
-                    try {
-                        List<Matricula> listaMatricula = instancia.listar("getAllMatricula");
-
-                        if(!listaMatricula.isEmpty() && listaMatricula != null){
-                            for (Matricula matricula : listaMatricula) {
-                                System.out.println("Id: " + matricula.getIdMatricula() +
-                                    "   Id Profesor: " + matricula.getIdProfesorado() + 
-                                "   Id Alumno: " + matricula.getIdAlumnado() + 
-                                "   Asignatura: " + matricula.getAsignatura()+
-                                "   Curso:"+ matricula.getCurso() + 
-                                 "\n");
-                            }
-                        } else {
-                            System.out.println("No se ha encontrado a ninguna matrícula\n");
-                        }
-                    } catch (Exception e) {
-                        System.out.println("No se ha encontrado a ninguna matrícula\n");
-                    }
-                    break;
-
-                case 2:
-
-                    try {
-                        System.out.println("Introduzca el ID de la matrícula que desea buscar");
-                        int id = sc.nextInt();
-                        Matricula matricula = (Matricula) instancia.obtenerPorId("getMatriculaById",id);
-                        if(matricula != null){
+        switch (opcion) {
+            case 1:
+                try {
+                    instancia.abrir();
+                    List<Matricula> listaMatricula = instancia.listar("getAllMatricula");
+                    if (!listaMatricula.isEmpty() && listaMatricula != null) {
+                        for (Matricula matricula : listaMatricula) {
                             System.out.println("Id: " + matricula.getIdMatricula() +
                                     "   Id Profesor: " + matricula.getIdProfesorado() + 
-                                "   Id Alumno: " + matricula.getIdAlumnado() + 
-                                "   Asignatura: " + matricula.getAsignatura()+
-                                "   Curso:"+ matricula.getCurso() + 
-                                 "\n");
-
-                        }else {
-                            System.out.println("No se ha encontrado a ninguna matrícula con el ID introducido\n");
+                                    "   Id Alumno: " + matricula.getIdAlumnado() + 
+                                    "   Asignatura: " + matricula.getAsignatura() +
+                                    "   Curso: " + matricula.getCurso() + 
+                                    "\n");
                         }
-                        
-                    } catch (Exception e) {
+                    } else {
+                        System.out.println("No se ha encontrado a ninguna matrícula\n");
+                    }
+                    instancia.cerrar();
+                } catch (Exception e) {
+                    System.out.println("No se ha encontrado a ninguna matrícula\n");
+                    if (instancia != null) instancia.cerrar(); // Asegurar cierre en caso de error
+                }
+                break;
+    
+            case 2:
+                try {
+                    instancia.abrir();
+                    System.out.println("Introduzca el ID de la matrícula que desea buscar");
+                    int id = sc.nextInt();
+                    sc.nextLine(); // Limpiar buffer
+                    Matricula matricula = (Matricula) instancia.obtenerPorId("getMatriculaById", id);
+                    if (matricula != null) {
+                        System.out.println("Id: " + matricula.getIdMatricula() +
+                                "   Id Profesor: " + matricula.getIdProfesorado() + 
+                                "   Id Alumno: " + matricula.getIdAlumnado() + 
+                                "   Asignatura: " + matricula.getAsignatura() +
+                                "   Curso: " + matricula.getCurso() + 
+                                "\n");
+                    } else {
                         System.out.println("No se ha encontrado a ninguna matrícula con el ID introducido\n");
                     }
-                    break;
-
-                case 3:
-                    sc.nextLine();
-                    System.out.println("Introduzca el id del profesor");
-                    int idProfesor = sc.nextInt();
-                    sc.nextLine();
-                    System.out.println("Introduzca el id del alumnado");
-                    int idAlumnado = sc.nextInt();
-                    sc.nextLine();
-                    System.out.println("Introduzca la asignatura de la matricula");
-                    String asignatura = sc.nextLine();
-                    System.out.println("Introduzca el curso de la matrícula");
-                    int curso = sc.nextInt();
-                    sc.nextLine();
-                    Matricula matricula = new Matricula(idProfesor,idAlumnado,asignatura,curso);
-                    guardar(matricula);
-                    System.out.println("Matrícula guardada con éxito\n");
-                    break;
-
-                case 4:
+                    instancia.cerrar();
+                } catch (Exception e) {
+                    System.out.println("No se ha encontrado a ninguna matrícula con el ID introducido\n");
+                    if (instancia != null) instancia.cerrar(); // Asegurar cierre en caso de error
+                }
+                break;
+    
+            case 3:
+                sc.nextLine();
+                System.out.println("Introduzca el id del profesor");
+                int idProfesor = sc.nextInt();
+                sc.nextLine();
+                System.out.println("Introduzca el id del alumnado");
+                int idAlumnado = sc.nextInt();
+                sc.nextLine();
+                System.out.println("Introduzca la asignatura de la matricula");
+                String asignatura = sc.nextLine();
+                System.out.println("Introduzca el curso de la matrícula");
+                int curso = sc.nextInt();
+                sc.nextLine();
+                instancia.guardarMatricula(idAlumnado, idProfesor, asignatura, curso);
+                break;
+    
+            case 4:
                 try {
+                    instancia.abrir();
                     String elegirModificar = "";
-
                     System.out.println("Introduzca el id de la matrícula a modificar");
                     int idModificar = sc.nextInt();
                     sc.nextLine();
-
-                    Matricula matricula2 = (Matricula) instancia.obtenerPorId("getMatriculaById",idModificar);
-
+    
+                    Matricula matricula2 = (Matricula) instancia.obtenerPorId("getMatriculaById", idModificar);
+                    if (matricula2 == null) {
+                        System.out.println("No se ha encontrado una matrícula con ese ID\n");
+                        instancia.cerrar();
+                        break;
+                    }
+    
                     System.out.println("Id del profesor: " + matricula2.getIdProfesorado());
-
                     System.out.println("¿Desea modificar este campo?");
                     elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
+                    if (elegirModificar.equalsIgnoreCase("si")) {
                         System.out.println("Introduzca el nuevo id del profesor");
                         matricula2.setIdProfesorado(sc.nextInt());
                         sc.nextLine();
                     }
-
+    
                     System.out.println("Id del alumnado: " + matricula2.getIdAlumnado());
-
                     System.out.println("¿Desea modificar este campo?");
                     elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
+                    if (elegirModificar.equalsIgnoreCase("si")) {
                         System.out.println("Introduzca el nuevo id del alumnado");
                         matricula2.setIdAlumnado(sc.nextInt());
                         sc.nextLine();
                     }
-
+    
                     System.out.println("Asignatura de la matrícula: " + matricula2.getAsignatura());
-
                     System.out.println("¿Desea modificar este campo?");
                     elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
+                    if (elegirModificar.equalsIgnoreCase("si")) {
                         System.out.println("Introduzca la nueva asignatura de la matrícula");
-                        matricula2.setAsignatura(sc.nextLine());   
+                        matricula2.setAsignatura(sc.nextLine());
                     }
-
+    
                     System.out.println("Curso de la matrícula: " + matricula2.getCurso());
-
                     System.out.println("¿Desea modificar este campo?");
                     elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
+                    if (elegirModificar.equalsIgnoreCase("si")) {
                         System.out.println("Introduzca el nuevo curso de la matrícula");
                         matricula2.setCurso(sc.nextInt());
-                        sc.nextLine(); 
+                        sc.nextLine();
                     }
-                    
+    
                     actualizar(matricula2);
                     System.out.println("Matrícula actualizada con éxito\n");
-
+                    instancia.cerrar();
                 } catch (Exception e) {
                     System.out.println("Ha habido un error al actualizar la matrícula\n");
+                    if (instancia != null) instancia.cerrar(); // Asegurar cierre en caso de error
                 }
-                    
-                    break;
-
-                case 5:
+                break;
+    
+            case 5:
                 try {
+                    instancia.abrir();
                     String elegirBorrar = "";
-
                     System.out.println("Introduzca el id de la matrícula a borrar");
                     int idBorrar = sc.nextInt();
                     sc.nextLine();
-
-                    Matricula matricula3 = (Matricula) instancia.obtenerPorId("getMatriculaById",idBorrar);
-
+    
+                    Matricula matricula3 = (Matricula) instancia.obtenerPorId("getMatriculaById", idBorrar);
+                    if (matricula3 == null) {
+                        System.out.println("No se ha encontrado una matrícula con ese ID\n");
+                        instancia.cerrar();
+                        break;
+                    }
+    
                     System.out.println("Id: " + matricula3.getIdMatricula() +
-                                    "   Id Profesor: " + matricula3.getIdProfesorado() + 
-                                "   Id Alumno: " + matricula3.getIdAlumnado() + 
-                                "   Asignatura: " + matricula3.getAsignatura()+
-                                "   Curso:"+ matricula3.getCurso() + 
-                                 "\n");
+                            "   Id Profesor: " + matricula3.getIdProfesorado() + 
+                            "   Id Alumno: " + matricula3.getIdAlumnado() + 
+                            "   Asignatura: " + matricula3.getAsignatura() +
+                            "   Curso: " + matricula3.getCurso() + 
+                            "\n");
                     System.out.println("¿Desea borrar esta matrícula?");
                     elegirBorrar = sc.nextLine();
-
-                    if(elegirBorrar.equalsIgnoreCase("si")){
+    
+                    if (elegirBorrar.equalsIgnoreCase("si")) {
                         borrar(matricula3);
                         System.out.println("Matrícula borrada con éxito\n");
                     } else {
                         System.out.println("Matrícula no borrada\n");
                     }
+                    instancia.cerrar();
                 } catch (Exception e) {
                     System.out.println("Ha habido un error al borrar la matrícula\n");
+                    if (instancia != null) instancia.cerrar(); // Asegurar cierre en caso de error
                 }
-                    break;
-
-                case 6:
-                    break;
-                }   
-            
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+                break;
+    
+            case 6:
+                break;
         }
     }
     

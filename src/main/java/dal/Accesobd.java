@@ -9,6 +9,8 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.query.NativeQuery;
+
 import ent.*;
 
 public class Accesobd {
@@ -49,7 +51,7 @@ public class Accesobd {
     public void abrir() throws Exception {
         setUp();
         sesion=sf.openSession();
-        transaction = sesion.beginTransaction();
+        // transaction = sesion.beginTransaction();
     }
 
     
@@ -61,14 +63,23 @@ public class Accesobd {
      * Si se produce alguna excepción al intentar guardar los
      * cambios, se hace un rollback de la transacción.
      */
-    public void cerrar(){
-        try {
-            transaction.commit();
-        }catch(Exception e){
-            transaction.rollback();
+    public void cerrar() {
+        if (transaction != null && transaction.isActive()) {
+            try {
+                transaction.commit();
+            } catch (Exception e) {
+                transaction.rollback();
+                e.printStackTrace();
+            }
         }
-        sf.close();
+        if (sesion != null && sesion.isOpen()) { // ✅ Cerrar la sesión correctamente
+            sesion.close();
+        }
+        if (sf != null) {
+            sf.close();
+        }
     }
+    
 
     
     /**
@@ -80,8 +91,28 @@ public class Accesobd {
      * @return el objeto guardado, con su ID asignado.
      */
     public Object guardar(Object cosa) {
-        return sesion.save(cosa);
+        try {
+            abrir();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } // Abre la conexión
+        Transaction tx = sesion.beginTransaction();
+        Object resultado = null;
+        try {
+            resultado = sesion.save(cosa);
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback(); // Revertir en caso de error
+            }
+            e.printStackTrace();
+        } finally {
+            cerrar(); // Cierra la conexión
+        }
+        return resultado;
     }
+    
 
     
     /**
@@ -114,9 +145,29 @@ public class Accesobd {
      *             persistible por Hibernate y ya exista en la base de datos.
      */
 
-    public void borrar(Object cosa) {
-        sesion.delete(cosa);
+     public void borrar(Object cosa) {
+        try {
+            abrir();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } // Asegurar que la sesión está abierta
+        transaction = sesion.beginTransaction();
+        
+        try {
+            cosa = sesion.merge(cosa); // 🔹 Asegurar que el objeto está en la sesión
+            sesion.delete(cosa);       // 🔹 Borrar el objeto
+            transaction.commit();               // 🔹 Confirmar el borrado
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback(); // 🔹 Revertir en caso de error
+            }
+            e.printStackTrace();
+        } finally {
+            cerrar(); // 🔹 Cerrar la conexión
+        }
     }
+    
 
     
     /**
@@ -125,30 +176,67 @@ public class Accesobd {
      * @param cosa objeto a actualizar.
      */
     public void actualizar(Object cosa) {
-        sesion.update(cosa);
+        try {
+            abrir();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } // Asegurar que la sesión está abierta
+         transaction = sesion.beginTransaction();
+    
+        try {
+            cosa = sesion.merge(cosa); // 🔹 Asegurar que el objeto está en la sesión
+            sesion.update(cosa);       // 🔹 Actualizar el objeto
+            transaction.commit();               // 🔹 Confirmar los cambios
+            System.out.println("Objeto actualizado correctamente");
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback(); // 🔹 Revertir en caso de error
+            }
+            e.printStackTrace();
+        } finally {
+            cerrar(); // 🔹 Cerrar la conexión
+        }
     }
+    
 
     public void ejecutarDropTable(String nombreTabla) {
-        String hql = "DROP TABLE " + nombreTabla;
-        System.out.println("Ejecutando: " + hql);
-        sesion.createNativeQuery(hql).executeUpdate();
-        sesion.flush();
+
+        transaction = sesion.beginTransaction();
+
+        try {
+            String hql = "DROP TABLE " + nombreTabla;
+            System.out.println("Ejecutando: " + hql);
+            sesion.createNativeQuery(hql).executeUpdate();
+            transaction.commit();
+            sesion.flush();
+            
+        } catch (Exception e) {
+            if(transaction != null && transaction.isActive()){
+                transaction.rollback();
+            }
+
+        }
+        
     }
 
     public void borrarTodasLasTablasConDependencias() {
+        transaction = sesion.beginTransaction();
+
         try {
-            // Borrar primero las entidades que dependen de otras (por ejemplo, Matricula depende de Alumnado)
-            ejecutarDropTable("Matricula");  // Primero, borrar registros de la tabla "Matricula"
-            ejecutarDropTable("Alumnado");   // Luego, borrar registros de la tabla "Alumnado"
-            ejecutarDropTable("Profesores");   // Finalmente, borrar registros de la tabla "Profesor"
-            
-            // Asegurarse de que los cambios se escriban en la base de datos
-            sesion.flush();
+            // Crear la consulta SQL nativa para borrar la tabla
+            String sql = "DROP TABLE IF EXISTS Matricula, Alumnado, Profesores";
+
+            // Ejecutar la consulta SQL nativa
+            sesion.createNativeQuery(sql).executeUpdate();
         } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             e.printStackTrace();
-            throw new RuntimeException("Error al borrar todas las tablas con dependencias", e);
         }
     }
+    
 
     public void ejecutarDeleteTable(String entidad) {
         String hql = "DELETE FROM " + entidad;
@@ -164,15 +252,15 @@ public class Accesobd {
                 transaction = sesion.beginTransaction();
 
                 String sql = "CREATE TABLE IF NOT EXISTS Alumnado ("
-                    + "idAlumnado INT PRIMARY KEY, "
+                    + "idAlumnado INT AUTO_INCREMENT PRIMARY KEY, "
                     + "nombre VARCHAR(255), "
                     + "apellidos VARCHAR(255), "
-                    + "fechaNac DATE);";
+                    + "fechaNac VARCHAR(255));";
 
                 sesion.createNativeQuery(sql).executeUpdate();
 
                 transaction.commit();
-                System.out.println("Tabla Alumnado creada")
+                System.out.println("Tabla Alumnado creada");
             } catch(Exception e){
                 if(transaction != null && transaction.isActive()){
                     transaction.rollback();
@@ -197,19 +285,19 @@ public class Accesobd {
                     + "idProfesor INT AUTO_INCREMENT PRIMARY KEY, "
                     + "nombre VARCHAR(255), "
                     + "apellidos VARCHAR(255), "
-                    + "fechaNac DATE, "
+                    + "fechaNac VARCHAR(255), "
                     + "antiguedad INT);";
                 sesion.createNativeQuery(sql).executeUpdate();
 
                 transaction.commit();
-                System.out.println("Tabla Profesores creada")
+                System.out.println("Tabla Profesores creada");
 
             }catch(Exception e){
                 if(transaction != null && transaction.isActive()){
                     transaction.rollback();
                 }
             }finally{
-                cerrar()
+                cerrar();
             }
         }
 
@@ -222,7 +310,7 @@ public class Accesobd {
                 abrir();
                 transaction = sesion.beginTransaction();
 
-                sesion.createNativeQuery(sql).executeUpdate();
+                
 
                 String sql = "CREATE TABLE IF NOT EXISTS Matricula ("
                     + "idMatricula INT AUTO_INCREMENT PRIMARY KEY, "
@@ -230,11 +318,12 @@ public class Accesobd {
                     + "idAlumnado INT, "
                     + "asignatura VARCHAR(255), "
                     + "curso INT, "
-                    + "FOREIGN KEY (idProfesor) REFERENCES Profesores(idProfesor) ON DELETE CASCADE, "
-                    + "FOREIGN KEY (idAlumnado) REFERENCES Alumnado(idAlumnado) ON DELETE CASCADE);";
+                    + "FOREIGN KEY (idProfesor) REFERENCES Profesores(idProfesor) ON DELETE CASCADE ON UPDATE CASCADE, "
+                    + "FOREIGN KEY (idAlumnado) REFERENCES Alumnado(idAlumnado) ON DELETE CASCADE ON UPDATE CASCADE);";
 
+                sesion.createNativeQuery(sql).executeUpdate();
                 transaction.commit();
-                System.out.println("Tabla Matricula creada")
+                System.out.println("Tabla Matricula creada");
 
             }catch(Exception e){
                 if(transaction!=null && transaction.isActive()){
@@ -249,14 +338,18 @@ public class Accesobd {
     public boolean tablaExists(String nombreTabla){
         boolean existe = false;
         try{
-            abrir()
+            abrir();
 
             String sql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = :nombreTabla";
-            NativeQuery <?> = sesion.createNativeQuery(sql);
+
+            NativeQuery <?> query = sesion.createNativeQuery(sql);
+            
             query.setParameter("nombreTabla",nombreTabla);
 
             Number count = (Number) query.getSingleResult();
+            
             existe = count.intValue()  > 0;
+        
         } catch (Exception e){
             e.printStackTrace();
         }finally {
@@ -266,18 +359,62 @@ public class Accesobd {
         return existe;
     }
 
-    private void ejecutarSQL(String sql) {
-        Transaction tx = null;
+    public boolean verificarExistenciaAlumno(int idAlumno) {
+        String hql = "SELECT COUNT(a) FROM Alumnado a WHERE a.idAlumnado = :idAlumno";
+        Long count = (Long) sesion.createQuery(hql)
+                                  .setParameter("idAlumno", idAlumno)
+                                  .getSingleResult();
+        return count > 0;  // Retorna true si existe, false si no existe
+    }
+    
+    public boolean verificarExistenciaProfesor(int idProfesor) {
+        String hql = "SELECT COUNT(p) FROM Profesores p WHERE p.idProfesor = :idProfesor";
+        Long count = (Long) sesion.createQuery(hql)
+                                  .setParameter("idProfesor", idProfesor)
+                                  .getSingleResult();
+        return count > 0;  // Retorna true si existe, false si no existe
+    }
+    
+    public void guardarMatricula(int idAlumno, int idProfesor, String asignatura, int curso) {
         try {
-            tx = sesion.beginTransaction();
-            sesion.createNativeQuery(sql).executeUpdate();
-            tx.commit();
-        } catch (Exception e) {
-            if (tx != null) {
-                tx.rollback();
+            abrir(); // Asegurarse de abrir la conexión
+            // Verificar si el alumno y el profesor existen en la base de datos
+            boolean alumnoExiste = verificarExistenciaAlumno(idAlumno);
+            boolean profesorExiste = verificarExistenciaProfesor(idProfesor);
+    
+            if (!alumnoExiste) {
+                System.out.println("Error: El alumno con ID " + idAlumno + " no existe.");
+                return; // Salir si el alumno no existe
             }
+    
+            if (!profesorExiste) {
+                System.out.println("Error: El profesor con ID " + idProfesor + " no existe.");
+                return; // Salir si el profesor no existe
+            }
+    
+            // Si ambos existen, proceder a guardar la matrícula
+            Transaction tx = sesion.beginTransaction();
+    
+            Matricula matricula = new Matricula(); // Crear nueva matrícula
+            matricula.setIdAlumnado(idAlumno);     // Asignar idAlumno
+            matricula.setIdProfesorado(idProfesor);   // Asignar idProfesor
+            matricula.setAsignatura(asignatura);   // Asignar asignatura
+            matricula.setCurso(curso);             // Asignar curso
+    
+            sesion.save(matricula); // Guardar la matrícula
+            tx.commit();            // Confirmar transacción
+    
+            System.out.println("Matrícula guardada correctamente");
+        } catch (Exception e) {
             e.printStackTrace();
+            if (sesion.getTransaction().isActive()) {
+                sesion.getTransaction().rollback(); // Revertir en caso de error
+            }
+        } finally {
+            cerrar(); // Cerrar la sesión
         }
     }
+    
+
 
 }
