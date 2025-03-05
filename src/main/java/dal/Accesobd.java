@@ -157,37 +157,113 @@ public class Accesobd {
     }
 
     public void ejecutarCrearTableAlumnado() {
-        String sql = "CREATE TABLE IF NOT EXISTS Alumnado ("
-                + "idAlumnado INT PRIMARY KEY, "
-                + "nombre VARCHAR(255), "
-                + "apellidos VARCHAR(255), "
-                + "fechaNac DATE)";
 
-        ejecutarSQL(sql);
+        if(!tablaExists("Alumnado")){
+            try{
+                abrir();
+                transaction = sesion.beginTransaction();
+
+                String sql = "CREATE TABLE IF NOT EXISTS Alumnado ("
+                    + "idAlumnado INT PRIMARY KEY, "
+                    + "nombre VARCHAR(255), "
+                    + "apellidos VARCHAR(255), "
+                    + "fechaNac DATE);";
+
+                sesion.createNativeQuery(sql).executeUpdate();
+
+                transaction.commit();
+                System.out.println("Tabla Alumnado creada")
+            } catch(Exception e){
+                if(transaction != null && transaction.isActive()){
+                    transaction.rollback();
+                }
+
+                e.printStackTrace();
+            }finally {
+                cerrar();
+            }
+        }
+        
     }
 
     public void ejecutarCrearTableProfesores() {
-        String sql = "CREATE TABLE IF NOT EXISTS Profesores ("
-                + "idProfesor INT AUTO_INCREMENT PRIMARY KEY, "
-                + "nombre VARCHAR(255), "
-                + "apellidos VARCHAR(255), "
-                + "fechaNac DATE, "
-                + "antiguedad INT)";
 
-        ejecutarSQL(sql);
+        if(!tablaExists("Profesores")){
+            try{
+                abrir();
+                transaction = sesion.beginTransaction();
+
+                String sql = "CREATE TABLE IF NOT EXISTS Profesores ("
+                    + "idProfesor INT AUTO_INCREMENT PRIMARY KEY, "
+                    + "nombre VARCHAR(255), "
+                    + "apellidos VARCHAR(255), "
+                    + "fechaNac DATE, "
+                    + "antiguedad INT);";
+                sesion.createNativeQuery(sql).executeUpdate();
+
+                transaction.commit();
+                System.out.println("Tabla Profesores creada")
+
+            }catch(Exception e){
+                if(transaction != null && transaction.isActive()){
+                    transaction.rollback();
+                }
+            }finally{
+                cerrar()
+            }
+        }
+
     }
 
     public void ejecutarCrearTableMatricula() {
-        String sql = "CREATE TABLE IF NOT EXISTS Matricula ("
-                + "idMatricula INT AUTO_INCREMENT PRIMARY KEY, "
-                + "idProfesor INT, "
-                + "idAlumnado INT, "
-                + "asignatura VARCHAR(255), "
-                + "curso INT, "
-                + "FOREIGN KEY (idProfesor) REFERENCES Profesores(idProfesor), "
-                + "FOREIGN KEY (idAlumnado) REFERENCES Alumnado(idAlumnado))";
 
-        ejecutarSQL(sql);
+        if(!tablaExists("Matricula")){
+            try{
+                abrir();
+                transaction = sesion.beginTransaction();
+
+                sesion.createNativeQuery(sql).executeUpdate();
+
+                String sql = "CREATE TABLE IF NOT EXISTS Matricula ("
+                    + "idMatricula INT AUTO_INCREMENT PRIMARY KEY, "
+                    + "idProfesor INT, "
+                    + "idAlumnado INT, "
+                    + "asignatura VARCHAR(255), "
+                    + "curso INT, "
+                    + "FOREIGN KEY (idProfesor) REFERENCES Profesores(idProfesor) ON DELETE CASCADE, "
+                    + "FOREIGN KEY (idAlumnado) REFERENCES Alumnado(idAlumnado) ON DELETE CASCADE);";
+
+                transaction.commit();
+                System.out.println("Tabla Matricula creada")
+
+            }catch(Exception e){
+                if(transaction!=null && transaction.isActive()){
+                    transaction.rollback();
+                }
+            }finally{
+                cerrar();
+            }
+        }
+    }
+
+    public boolean tablaExists(String nombreTabla){
+        boolean existe = false;
+        try{
+            abrir()
+
+            String sql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = :nombreTabla";
+            NativeQuery <?> = sesion.createNativeQuery(sql);
+            query.setParameter("nombreTabla",nombreTabla);
+
+            Number count = (Number) query.getSingleResult();
+            existe = count.intValue()  > 0;
+        } catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            cerrar();
+        }
+
+        return existe;
     }
 
     private void ejecutarSQL(String sql) {
