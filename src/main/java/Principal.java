@@ -534,19 +534,59 @@ public class Principal {
                 }
                 break;
     
-            case 3:
+                case 3:
                 sc.nextLine();
-                System.out.println("Introduzca el id del profesor");
-                int idProfesor = sc.nextInt();
-                sc.nextLine();
-                System.out.println("Introduzca el id del alumnado");
-                int idAlumnado = sc.nextInt();
-                sc.nextLine();
+                int idProfesor = 0;
+                int idAlumnado = 0;
+                boolean profesorValido = false;
+                boolean alumnoValido = false;
+            
+                // Bucle para el ID del profesor
+                while (!profesorValido) {
+                    System.out.println("Introduzca el id del profesor");
+                    idProfesor = sc.nextInt();
+                    sc.nextLine();
+                    try {
+                        instancia.abrir();
+                        if (instancia.verificarExistenciaProfesor(idProfesor)) {
+                            profesorValido = true; // Salir del bucle si el profesor existe
+                        } else {
+                            System.out.println("Error: El profesor con ID " + idProfesor + " no existe. Intente de nuevo.");
+                        }
+                        instancia.cerrar();
+                    } catch (Exception e) {
+                        System.out.println("Error al verificar el profesor. Intente de nuevo.");
+                        instancia.cerrar();
+                    }
+                }
+            
+                // Bucle para el ID del alumno
+                while (!alumnoValido) {
+                    System.out.println("Introduzca el id del alumnado");
+                    idAlumnado = sc.nextInt();
+                    sc.nextLine();
+                    try {
+                        instancia.abrir();
+                        if (instancia.verificarExistenciaAlumno(idAlumnado)) {
+                            alumnoValido = true; // Salir del bucle si el alumno existe
+                        } else {
+                            System.out.println("Error: El alumno con ID " + idAlumnado + " no existe. Intente de nuevo.");
+                        }
+                        instancia.cerrar();
+                    } catch (Exception e) {
+                        System.out.println("Error al verificar el alumno. Intente de nuevo.");
+                        instancia.cerrar();
+                    }
+                }
+            
+                // Si llegamos aquí, ambos IDs son válidos, pedimos el resto
                 System.out.println("Introduzca la asignatura de la matricula");
                 String asignatura = sc.nextLine();
                 System.out.println("Introduzca el curso de la matrícula");
                 int curso = sc.nextInt();
                 sc.nextLine();
+            
+                // Guardar la matrícula
                 instancia.guardarMatricula(idAlumnado, idProfesor, asignatura, curso);
                 break;
     

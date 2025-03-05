@@ -378,38 +378,25 @@ public class Accesobd {
     public void guardarMatricula(int idAlumno, int idProfesor, String asignatura, int curso) {
         try {
             abrir(); // Asegurarse de abrir la conexión
-            // Verificar si el alumno y el profesor existen en la base de datos
-            boolean alumnoExiste = verificarExistenciaAlumno(idAlumno);
-            boolean profesorExiste = verificarExistenciaProfesor(idProfesor);
-    
-            if (!alumnoExiste) {
-                System.out.println("Error: El alumno con ID " + idAlumno + " no existe.");
-                return; // Salir si el alumno no existe
-            }
-    
-            if (!profesorExiste) {
-                System.out.println("Error: El profesor con ID " + idProfesor + " no existe.");
-                return; // Salir si el profesor no existe
-            }
-    
-            // Si ambos existen, proceder a guardar la matrícula
+        
             Transaction tx = sesion.beginTransaction();
-    
+        
             Matricula matricula = new Matricula(); // Crear nueva matrícula
             matricula.setIdAlumnado(idAlumno);     // Asignar idAlumno
             matricula.setIdProfesorado(idProfesor);   // Asignar idProfesor
             matricula.setAsignatura(asignatura);   // Asignar asignatura
             matricula.setCurso(curso);             // Asignar curso
-    
+        
             sesion.save(matricula); // Guardar la matrícula
             tx.commit();            // Confirmar transacción
-    
+        
             System.out.println("Matrícula guardada correctamente");
         } catch (Exception e) {
             e.printStackTrace();
             if (sesion.getTransaction().isActive()) {
                 sesion.getTransaction().rollback(); // Revertir en caso de error
             }
+            System.out.println("Error al guardar la matrícula.\n");
         } finally {
             cerrar(); // Cerrar la sesión
         }
