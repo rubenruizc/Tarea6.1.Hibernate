@@ -138,6 +138,28 @@ public class Accesobd {
 
         return query.getSingleResult();
     }
+
+        /**
+     * Busca objetos en la base de datos por un campo específico.
+     * @param entidad Nombre de la entidad (Alumnado, Profesores, Matricula).
+     * @param campo Nombre del campo por el cual buscar.
+     * @param valor Valor a buscar (puede ser String o Integer según el campo).
+     * @return Lista de objetos que coinciden con el criterio.
+     * @throws Exception Si ocurre un error durante la consulta.
+     */
+    public List<Object> buscarPorCampo(String entidad, String campo, Object valor) throws Exception {
+        if (sesion == null || !sesion.isOpen()) {
+            throw new IllegalStateException("La sesión no está abierta. Llame a abrir() primero.");
+        }
+        try {
+            String hql = "FROM " + entidad + " e WHERE e." + campo + " = :valor";
+            TypedQuery<Object> query = sesion.createQuery(hql, Object.class);
+            query.setParameter("valor", valor);
+            return query.getResultList();
+        } catch (Exception e) {
+            throw new Exception("Error al buscar por " + campo + " en " + entidad + ": " + e.getMessage(), e);
+        }
+    }
     
     
     /**
@@ -189,7 +211,6 @@ public class Accesobd {
             cosa = sesion.merge(cosa); // 🔹 Asegurar que el objeto está en la sesión
             sesion.update(cosa);       // 🔹 Actualizar el objeto
             transaction.commit();               // 🔹 Confirmar los cambios
-            System.out.println("Objeto actualizado correctamente");
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback(); // 🔹 Revertir en caso de error
@@ -263,62 +284,56 @@ public class Accesobd {
     }
 
     public void ejecutarCrearTableAlumnado() {
-
-        if(!tablaExists("Alumnado")){
-            try{
+        if (!tablaExists("Alumnado")) {
+            try {
                 abrir();
                 transaction = sesion.beginTransaction();
-
+    
                 String sql = "CREATE TABLE IF NOT EXISTS Alumnado ("
-                    + "idAlumnado INT AUTO_INCREMENT PRIMARY KEY, "
-                    + "nombre VARCHAR(255), "
-                    + "apellidos VARCHAR(255), "
-                    + "fechaNac VARCHAR(255));";
-
+                        + "idAlumnado INT AUTO_INCREMENT PRIMARY KEY, "
+                        + "nombre VARCHAR(255), "
+                        + "apellidos VARCHAR(255), "
+                        + "fechaNac DATE);"; // Cambiado a DATE
+    
                 sesion.createNativeQuery(sql).executeUpdate();
-
+    
                 transaction.commit();
                 System.out.println("Tabla Alumnado creada");
-            } catch(Exception e){
-                if(transaction != null && transaction.isActive()){
+            } catch (Exception e) {
+                if (transaction != null && transaction.isActive()) {
                     transaction.rollback();
                 }
-
                 e.printStackTrace();
-            }finally {
+            } finally {
                 cerrar();
             }
         }
-        
     }
 
     public void ejecutarCrearTableProfesores() {
-
-        if(!tablaExists("Profesores")){
-            try{
+        if (!tablaExists("Profesores")) {
+            try {
                 abrir();
                 transaction = sesion.beginTransaction();
-
+    
                 String sql = "CREATE TABLE IF NOT EXISTS Profesores ("
-                    + "idProfesor INT AUTO_INCREMENT PRIMARY KEY, "
-                    + "nombre VARCHAR(255), "
-                    + "apellidos VARCHAR(255), "
-                    + "fechaNac VARCHAR(255), "
-                    + "antiguedad INT);";
+                        + "idProfesor INT AUTO_INCREMENT PRIMARY KEY, "
+                        + "nombre VARCHAR(255), "
+                        + "apellidos VARCHAR(255), "
+                        + "fechaNac DATE, " // Cambiado a DATE
+                        + "antiguedad INT);";
                 sesion.createNativeQuery(sql).executeUpdate();
-
+    
                 transaction.commit();
                 System.out.println("Tabla Profesores creada");
-
-            }catch(Exception e){
-                if(transaction != null && transaction.isActive()){
+            } catch (Exception e) {
+                if (transaction != null && transaction.isActive()) {
                     transaction.rollback();
                 }
-            }finally{
+            } finally {
                 cerrar();
             }
         }
-
     }
 
     public void ejecutarCrearTableMatricula() {

@@ -1,4 +1,5 @@
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -6,6 +7,8 @@ import dal.Accesobd;
 import ent.Alumnado;
 import ent.Matricula;
 import ent.Profesores;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Principal {
     private static Accesobd instancia;
@@ -247,86 +250,119 @@ public class Principal {
                     break;
 
                 case 2:
-
                     try {
-                        System.out.println("Introduzca el ID del alumno que desea buscar");
-                        int id = sc.nextInt();
-                        Alumnado alumnado = (Alumnado) instancia.obtenerPorId("getAlumnadoById",id);
-                        if(alumnado != null){
-                            System.out.println("Id: " + alumnado.getIdAlumnado() +
-                            "\nNombre: " + alumnado.getNombre() + 
-                            "\nApellidos: " + alumnado.getApellidos() + 
-                            "\nFecha de nacimiento: " + alumnado.getFechaNac() +"\n");
-
-                        }else {
-                            System.out.println("No se ha encontrado a ningun alumno con el ID introducido\n");
+                        instancia.abrir();
+                        System.out.println("¿Por qué campo desea buscar?");
+                        System.out.println("1. ID");
+                        System.out.println("2. Nombre");
+                        System.out.println("3. Apellidos");
+                        System.out.println("4. Fecha de nacimiento");
+                        int campoOpcion = sc.nextInt();
+                        sc.nextLine();
+                
+                        String campo = "";
+                        Object valor = null;
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                        switch (campoOpcion) {
+                            case 1:
+                                campo = "idAlumnado";
+                                System.out.println("Introduzca el ID del alumno que desea buscar");
+                                valor = sc.nextInt();
+                                sc.nextLine();
+                                break;
+                            case 2:
+                                campo = "nombre";
+                                System.out.println("Introduzca el nombre del alumno que desea buscar");
+                                valor = sc.nextLine();
+                                break;
+                            case 3:
+                                campo = "apellidos";
+                                System.out.println("Introduzca los apellidos del alumno que desea buscar");
+                                valor = sc.nextLine();
+                                break;
+                            case 4:
+                                campo = "fechaNac";
+                                System.out.println("Introduzca la fecha de nacimiento del alumno que desea buscar (formato: dd/MM/yyyy)");
+                                valor = validarYParsearFecha(sc.nextLine(), sc);
+                                break;
+                            default:
+                                System.out.println("Opción no válida\n");
+                                instancia.cerrar();
+                                break;
                         }
-                        
+                
+                        if (!campo.isEmpty()) {
+                            List<Object> resultados = instancia.buscarPorCampo("Alumnado", campo, valor);
+                            if (resultados != null && !resultados.isEmpty()) {
+                                for (Object obj : resultados) {
+                                    Alumnado alumnado = (Alumnado) obj;
+                                    System.out.println("Id: " + alumnado.getIdAlumnado() +
+                                            "\nNombre: " + alumnado.getNombre() +
+                                            "\nApellidos: " + alumnado.getApellidos() +
+                                            "\nFecha de nacimiento: " + (alumnado.getFechaNac() != null ? sdf.format(alumnado.getFechaNac()) : "No definida") + "\n");
+                                }
+                            } else {
+                                System.out.println("No se encontraron alumnos con ese criterio\n");
+                            }
+                        }
                     } catch (Exception e) {
-                        System.out.println("No se ha encontrado a ningún alumno con el ID introducido\n");
+                        System.out.println("Error al buscar alumno: " + e.getMessage() + "\n");
+                    } finally {
+                        instancia.cerrar();
                     }
                     break;
-
                 case 3:
                     sc.nextLine();
                     System.out.println("Introduzca el nombre del alumno");
                     String nombre = sc.nextLine();
                     System.out.println("Introduzca el apellido del alumno");
                     String apellido = sc.nextLine();
-                    System.out.println("Introduzca la fecha de nacimiento del alumno");
-                    String fechaNac = sc.nextLine();
-                    Alumnado alumnado = new Alumnado(nombre,apellido,fechaNac);
+                    System.out.println("Introduzca la fecha de nacimiento del alumno (formato: dd/MM/yyyy)");
+                    Date fechaNac = validarYParsearFecha(sc.nextLine(), sc);
+                    Alumnado alumnado = new Alumnado(nombre, apellido, fechaNac);
                     guardar(alumnado);
                     System.out.println("Alumno guardado con éxito\n");
                     break;
 
                 case 4:
-                try {
-                    String elegirModificar = "";
-
-                    System.out.println("Introduzca el id del alumno a modificar");
-                    int idModificar = sc.nextInt();
-                    sc.nextLine();
-
-                    Alumnado alumnado2 = (Alumnado) instancia.obtenerPorId("getAlumnadoById",idModificar);
-
-                    System.out.println("Nombre del alumno: " + alumnado2.getNombre());
-
-                    System.out.println("¿Desea modificar este campo?");
-                    elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
-                        System.out.println("Introduzca el nuevo nombre del alumno");
-                        alumnado2.setNombre(sc.nextLine());
+                    try {
+                        String elegirModificar = "";
+                        System.out.println("Introduzca el id del alumno a modificar");
+                        int idModificar = sc.nextInt();
+                        sc.nextLine();
+                
+                        Alumnado alumnado2 = (Alumnado) instancia.obtenerPorId("getAlumnadoById", idModificar);
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                
+                        System.out.println("Nombre del alumno: " + alumnado2.getNombre());
+                        System.out.println("¿Desea modificar este campo?");
+                        elegirModificar = sc.nextLine();
+                        if (elegirModificar.equalsIgnoreCase("si")) {
+                            System.out.println("Introduzca el nuevo nombre del alumno");
+                            alumnado2.setNombre(sc.nextLine());
+                        }
+                
+                        System.out.println("Apellidos del alumno: " + alumnado2.getApellidos());
+                        System.out.println("¿Desea modificar este campo?");
+                        elegirModificar = sc.nextLine();
+                        if (elegirModificar.equalsIgnoreCase("si")) {
+                            System.out.println("Introduzca el nuevo apellido del alumno");
+                            alumnado2.setApellidos(sc.nextLine());
+                        }
+                
+                        System.out.println("Fecha de nacimiento del alumno: " + (alumnado2.getFechaNac() != null ? sdf.format(alumnado2.getFechaNac()) : "No definida"));
+                        System.out.println("¿Desea modificar este campo?");
+                        elegirModificar = sc.nextLine();
+                        if (elegirModificar.equalsIgnoreCase("si")) {
+                            System.out.println("Introduzca la nueva fecha de nacimiento del alumno (formato: dd/MM/yyyy)");
+                            alumnado2.setFechaNac(validarYParsearFecha(sc.nextLine(), sc));
+                        }
+                
+                        actualizar(alumnado2);
+                        System.out.println("Alumno actualizado con éxito\n");
+                    } catch (Exception e) {
+                        System.out.println("Ha habido un error al actualizar el alumno\n");
                     }
-
-                    System.out.println("Apellidos del alumno: " + alumnado2.getApellidos());
-
-                    System.out.println("¿Desea modificar este campo?");
-                    elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
-                        System.out.println("Introduzca el nuevo apellido del alumno");
-                        alumnado2.setApellidos(sc.nextLine());
-                    }
-                    
-                    System.out.println("Fecha de nacimiento del alumno: " + alumnado2.getFechaNac());
-
-                    System.out.println("¿Desea modificar este campo?");
-                    elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
-                        System.out.println("Introduzca la nueva fecha de nacimiento del alumno");
-                        alumnado2.setFechaNac(sc.nextLine());    
-                    }
-                    
-                    actualizar(alumnado2);
-                    System.out.println("Alumno actualizado con éxito\n");
-
-                } catch (Exception e) {
-                    System.out.println("Ha habido un error al actualizar el alumno\n");
-                }
-                    
                     break;
 
                 case 5:
@@ -416,25 +452,73 @@ public class Principal {
                     break;
 
                 case 2:
-
                     try {
-                        System.out.println("Introduzca el ID del profesor que desea buscar");
-                        int id = sc.nextInt();
-                        Profesores profesor = (Profesores) instancia.obtenerPorId("getProfesorById",id);
-                        if(profesor != null){
-                            System.out.println("Id: " + profesor.getIdProfesor() +
-                            "\nNombre: " + profesor.getNombre() + 
-                            "\nApellidos: " + profesor.getApellidos() + 
-                            "\nFecha de nacimiento: " + profesor.getFechaNac() +
-                            "\nAntiguedad: " + profesor.getAntiguedad() +
-                            "\n");
-
-                        }else {
-                            System.out.println("No se ha encontrado a ningun profesor con el ID introducido\n");
+                        instancia.abrir();
+                        System.out.println("¿Por qué campo desea buscar?");
+                        System.out.println("1. ID");
+                        System.out.println("2. Nombre");
+                        System.out.println("3. Apellidos");
+                        System.out.println("4. Fecha de nacimiento");
+                        System.out.println("5. Antigüedad");
+                        int campoOpcion = sc.nextInt();
+                        sc.nextLine();
+                
+                        String campo = "";
+                        Object valor = null;
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                        switch (campoOpcion) {
+                            case 1:
+                                campo = "idProfesor";
+                                System.out.println("Introduzca el ID del profesor que desea buscar");
+                                valor = sc.nextInt();
+                                sc.nextLine();
+                                break;
+                            case 2:
+                                campo = "nombre";
+                                System.out.println("Introduzca el nombre del profesor que desea buscar");
+                                valor = sc.nextLine();
+                                break;
+                            case 3:
+                                campo = "apellidos";
+                                System.out.println("Introduzca los apellidos del profesor que desea buscar");
+                                valor = sc.nextLine();
+                                break;
+                            case 4:
+                                campo = "fechaNac";
+                                System.out.println("Introduzca la fecha de nacimiento del profesor que desea buscar (formato: dd/MM/yyyy)");
+                                valor = validarYParsearFecha(sc.nextLine(), sc);
+                                break;
+                            case 5:
+                                campo = "antiguedad";
+                                System.out.println("Introduzca la antigüedad del profesor que desea buscar");
+                                valor = sc.nextInt();
+                                sc.nextLine();
+                                break;
+                            default:
+                                System.out.println("Opción no válida\n");
+                                instancia.cerrar();
+                                break;
                         }
-                        
+                
+                        if (!campo.isEmpty()) {
+                            List<Object> resultados = instancia.buscarPorCampo("Profesores", campo, valor);
+                            if (resultados != null && !resultados.isEmpty()) {
+                                for (Object obj : resultados) {
+                                    Profesores profesor = (Profesores) obj;
+                                    System.out.println("Id: " + profesor.getIdProfesor() +
+                                            "\nNombre: " + profesor.getNombre() +
+                                            "\nApellidos: " + profesor.getApellidos() +
+                                            "\nFecha de nacimiento: " + (profesor.getFechaNac() != null ? sdf.format(profesor.getFechaNac()) : "No definida") +
+                                            "\nAntigüedad: " + profesor.getAntiguedad() + "\n");
+                                }
+                            } else {
+                                System.out.println("No se encontraron profesores con ese criterio\n");
+                            }
+                        }
                     } catch (Exception e) {
-                        System.out.println("No se ha encontrado a ningún profesor con el ID introducido\n");
+                        System.out.println("Error al buscar profesor: " + e.getMessage() + "\n");
+                    } finally {
+                        instancia.cerrar();
                     }
                     break;
 
@@ -444,74 +528,64 @@ public class Principal {
                     String nombre = sc.nextLine();
                     System.out.println("Introduzca el apellido del profesor");
                     String apellido = sc.nextLine();
-                    System.out.println("Introduzca la fecha de nacimiento del profesor");
-                    String fechaNac = sc.nextLine();
-                    System.out.println("Introduzca la antiguedad del profesor");
+                    System.out.println("Introduzca la fecha de nacimiento del profesor (formato: dd/MM/yyyy)");
+                    Date fechaNac = validarYParsearFecha(sc.nextLine(), sc);
+                    System.out.println("Introduzca la antigüedad del profesor");
                     int antiguedad = sc.nextInt();
                     sc.nextLine();
-                    Profesores profesor = new Profesores(nombre,apellido,fechaNac,antiguedad);
+                    Profesores profesor = new Profesores(nombre, apellido, fechaNac, antiguedad);
                     guardar(profesor);
                     System.out.println("Profesor guardado con éxito\n");
                     break;
 
-                case 4:
-                try {
-                    String elegirModificar = "";
-
-                    System.out.println("Introduzca el id del profesor a modificar");
-                    int idModificar = sc.nextInt();
-                    sc.nextLine();
-
-                    Profesores profesor2 = (Profesores) instancia.obtenerPorId("getProfesorById",idModificar);
-
-                    System.out.println("Nombre del profesor: " + profesor2.getNombre());
-
-                    System.out.println("¿Desea modificar este campo?");
-                    elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
-                        System.out.println("Introduzca el nuevo nombre del profesor");
-                        profesor2.setNombre(sc.nextLine());
+                    case 4:
+                    try {
+                        String elegirModificar = "";
+                        System.out.println("Introduzca el id del profesor a modificar");
+                        int idModificar = sc.nextInt();
+                        sc.nextLine();
+                
+                        Profesores profesor2 = (Profesores) instancia.obtenerPorId("getProfesorById", idModificar);
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                
+                        System.out.println("Nombre del profesor: " + profesor2.getNombre());
+                        System.out.println("¿Desea modificar este campo?");
+                        elegirModificar = sc.nextLine();
+                        if (elegirModificar.equalsIgnoreCase("si")) {
+                            System.out.println("Introduzca el nuevo nombre del profesor");
+                            profesor2.setNombre(sc.nextLine());
+                        }
+                
+                        System.out.println("Apellidos del profesor: " + profesor2.getApellidos());
+                        System.out.println("¿Desea modificar este campo?");
+                        elegirModificar = sc.nextLine();
+                        if (elegirModificar.equalsIgnoreCase("si")) {
+                            System.out.println("Introduzca el nuevo apellido del profesor");
+                            profesor2.setApellidos(sc.nextLine());
+                        }
+                
+                        System.out.println("Fecha de nacimiento del profesor: " + (profesor2.getFechaNac() != null ? sdf.format(profesor2.getFechaNac()) : "No definida"));
+                        System.out.println("¿Desea modificar este campo?");
+                        elegirModificar = sc.nextLine();
+                        if (elegirModificar.equalsIgnoreCase("si")) {
+                            System.out.println("Introduzca la nueva fecha de nacimiento del profesor (formato: dd/MM/yyyy)");
+                            profesor2.setFechaNac(validarYParsearFecha(sc.nextLine(), sc));
+                        }
+                
+                        System.out.println("Antigüedad del profesor: " + profesor2.getAntiguedad());
+                        System.out.println("¿Desea modificar este campo?");
+                        elegirModificar = sc.nextLine();
+                        if (elegirModificar.equalsIgnoreCase("si")) {
+                            System.out.println("Introduzca la nueva antigüedad del profesor");
+                            profesor2.setAntiguedad(sc.nextInt());
+                            sc.nextLine();
+                        }
+                
+                        actualizar(profesor2);
+                        System.out.println("Profesor actualizado con éxito\n");
+                    } catch (Exception e) {
+                        System.out.println("Ha habido un error al actualizar el profesor\n");
                     }
-
-                    System.out.println("Apellidos del profesor: " + profesor2.getApellidos());
-
-                    System.out.println("¿Desea modificar este campo?");
-                    elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
-                        System.out.println("Introduzca el nuevo apellido del profesor");
-                        profesor2.setApellidos(sc.nextLine());
-                    }
-                    
-                    System.out.println("Fecha de nacimiento del profesor: " + profesor2.getFechaNac());
-
-                    System.out.println("¿Desea modificar este campo?");
-                    elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
-                        System.out.println("Introduzca la nueva fecha de nacimiento del profesor");
-                        profesor2.setFechaNac(sc.nextLine());    
-                    }
-
-                    System.out.println("Antiguedad del profesor: " + profesor2.getAntiguedad());
-
-                    System.out.println("¿Desea modificar este campo?");
-                    elegirModificar = sc.nextLine();
-
-                    if(elegirModificar.equalsIgnoreCase("si")){
-                        System.out.println("Introduzca la nueva antiguedad del profesor");
-                        profesor2.setAntiguedad(sc.nextInt());   
-                        sc.nextLine(); 
-                    }
-                    
-                    actualizar(profesor2);
-                    System.out.println("Profesor actualizado con éxito\n");
-
-                } catch (Exception e) {
-                    System.out.println("Ha habido un error al actualizar el profesor\n");
-                }
-                    
                     break;
 
                 case 5:
@@ -601,24 +675,72 @@ public class Principal {
             case 2:
                 try {
                     instancia.abrir();
-                    System.out.println("Introduzca el ID de la matrícula que desea buscar");
-                    int id = sc.nextInt();
-                    sc.nextLine(); // Limpiar buffer
-                    Matricula matricula = (Matricula) instancia.obtenerPorId("getMatriculaById", id);
-                    if (matricula != null) {
-                        System.out.println("Id: " + matricula.getIdMatricula() +
-                                "   Id Profesor: " + matricula.getIdProfesorado() + 
-                                "   Id Alumno: " + matricula.getIdAlumnado() + 
-                                "   Asignatura: " + matricula.getAsignatura() +
-                                "   Curso: " + matricula.getCurso() + 
-                                "\n");
-                    } else {
-                        System.out.println("No se ha encontrado a ninguna matrícula con el ID introducido\n");
+                    System.out.println("¿Por qué campo desea buscar?");
+                    System.out.println("1. ID");
+                    System.out.println("2. ID Profesor");
+                    System.out.println("3. ID Alumno");
+                    System.out.println("4. Asignatura");
+                    System.out.println("5. Curso");
+                    int campoOpcion = sc.nextInt();
+                    sc.nextLine();
+            
+                    String campo = "";
+                    Object valor = null;
+                    switch (campoOpcion) {
+                        case 1:
+                            campo = "idMatricula";
+                            System.out.println("Introduzca el ID de la matrícula que desea buscar");
+                            valor = sc.nextInt();
+                            sc.nextLine();
+                            break;
+                        case 2:
+                            campo = "idProfesorado";
+                            System.out.println("Introduzca el ID del profesor que desea buscar");
+                            valor = sc.nextInt();
+                            sc.nextLine();
+                            break;
+                        case 3:
+                            campo = "idAlumnado";
+                            System.out.println("Introduzca el ID del alumno que desea buscar");
+                            valor = sc.nextInt();
+                            sc.nextLine();
+                            break;
+                        case 4:
+                            campo = "asignatura";
+                            System.out.println("Introduzca la asignatura de la matrícula que desea buscar");
+                            valor = sc.nextLine();
+                            break;
+                        case 5:
+                            campo = "curso";
+                            System.out.println("Introduzca el curso de la matrícula que desea buscar");
+                            valor = sc.nextInt();
+                            sc.nextLine();
+                            break;
+                        default:
+                            System.out.println("Opción no válida\n");
+                            instancia.cerrar();
+                            break;
                     }
-                    instancia.cerrar();
+            
+                    if (!campo.isEmpty()) {
+                        List<Object> resultados = instancia.buscarPorCampo("Matricula", campo, valor);
+                        if (resultados != null && !resultados.isEmpty()) {
+                            for (Object obj : resultados) {
+                                Matricula matricula = (Matricula) obj;
+                                System.out.println("Id: " + matricula.getIdMatricula() +
+                                        "\nId Profesor: " + matricula.getIdProfesorado() + 
+                                        "\nId Alumno: " + matricula.getIdAlumnado() + 
+                                        "\nAsignatura: " + matricula.getAsignatura() +
+                                        "\nCurso: " + matricula.getCurso() + "\n");
+                            }
+                        } else {
+                            System.out.println("No se encontraron matrículas con ese criterio\n");
+                        }
+                    }
                 } catch (Exception e) {
-                    System.out.println("No se ha encontrado a ninguna matrícula con el ID introducido\n");
-                    if (instancia != null) instancia.cerrar(); // Asegurar cierre en caso de error
+                    System.out.println("Error al buscar matrícula: " + e.getMessage() + "\n");
+                } finally {
+                    instancia.cerrar();
                 }
                 break;
     
@@ -783,7 +905,7 @@ public class Principal {
 
         System.out.println("Que le gustaría hacer en la entidad ALUMNADO?");
         System.out.println("1.Ver el listado completo de alumnado");
-        System.out.println("2.Buscar alumnado por ID");
+        System.out.println("2.Buscar alumnado por campo");
         System.out.println("3.Guardar un alumno");
         System.out.println("4.Modificar un alumno");
         System.out.println("5.Borrar un alumno");
@@ -793,7 +915,7 @@ public class Principal {
     private static void menuProfesorado(){
         System.out.println("Que le gustaría hacer en la entidad PROFESORADO?");
         System.out.println("1.Ver el listado completo de profesores");
-        System.out.println("2.Buscar profesor por ID");
+        System.out.println("2.Buscar profesor por campo");
         System.out.println("3.Guardar un profesor");
         System.out.println("4.Modificar un profesor");
         System.out.println("5.Borrar un profesor");
@@ -804,7 +926,7 @@ public class Principal {
 
         System.out.println("Que le gustará hacer en la entidad MATRICULA?");
         System.out.println("1.Ver el listado completo de matriculas");
-        System.out.println("2.Buscar matricula por ID");
+        System.out.println("2.Buscar matricula por campo");
         System.out.println("3.Guardar una matricula");
         System.out.println("4.Modificar una matricula");
         System.out.println("5.Borrar una matricula");
@@ -861,5 +983,23 @@ public class Principal {
 
 
     }
+
+    private static Date validarYParsearFecha(String input, Scanner sc) {
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    sdf.setLenient(false); // No permite fechas inválidas como 31/02/xxxx
+    Date fecha = null;
+    boolean fechaValida = false;
+
+    while (!fechaValida) {
+        try {
+            fecha = sdf.parse(input);
+            fechaValida = true;
+        } catch (Exception e) {
+            System.out.println("Fecha inválida. Por favor, use el formato dd/MM/yyyy (ej. 15/03/2000):");
+            input = sc.nextLine();
+        }
+    }
+    return fecha;
+}
 
 }
