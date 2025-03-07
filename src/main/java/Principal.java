@@ -942,9 +942,7 @@ public class Principal {
     }
 
     private static void actualizar(Object cosa) throws Exception {
-        instancia.abrir();
-        instancia.actualizar(cosa);
-        instancia.cerrar();
+        instancia.actualizar(cosa); // Sin abrir/cerrar aquí, dejar que Accesobd lo maneje
     }
 
     private static void borrar(Object cosa) throws Exception {

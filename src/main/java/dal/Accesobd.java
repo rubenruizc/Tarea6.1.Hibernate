@@ -50,9 +50,10 @@ public class Accesobd {
      * @throws Exception si se produce un error al abrir la conexi n.
      */
     public void abrir() throws Exception {
-        setUp();
-        sesion=sf.openSession();
-        // transaction = sesion.beginTransaction();
+        if (sesion == null || !sesion.isOpen()) {
+            setUp();
+            sesion = sf.openSession();
+        }
     }
 
     
@@ -197,29 +198,30 @@ public class Accesobd {
      * Actualiza un objeto en la base de datos. El objeto debe ser
      * persistible por Hibernate y ya existir en la base de datos.
      * @param cosa objeto a actualizar.
-     */
-    public void actualizar(Object cosa) {
-        try {
-            abrir();
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } // Asegurar que la sesión está abierta
-         transaction = sesion.beginTransaction();
-    
-        try {
-            cosa = sesion.merge(cosa); // 🔹 Asegurar que el objeto está en la sesión
-            sesion.update(cosa);       // 🔹 Actualizar el objeto
-            transaction.commit();               // 🔹 Confirmar los cambios
-        } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback(); // 🔹 Revertir en caso de error
+          * @throws Exception 
+          */
+          public void actualizar(Object cosa) throws Exception {
+            try {
+                if (sesion == null || !sesion.isOpen()) {
+                    abrir(); // Solo abre si no está abierta
+                }
+                transaction = sesion.beginTransaction();
+                try {
+                    sesion.merge(cosa); // Solo merge, sin update
+                    transaction.commit();
+                } catch (Exception e) {
+                    if (transaction != null && transaction.isActive()) {
+                        transaction.rollback();
+                    }
+                    throw e;
+                } finally {
+                    cerrar();
+                }
+            } catch (Exception e) {
+                System.out.println("Error en actualizar: " + e.getMessage());
+                throw e;
             }
-            e.printStackTrace();
-        } finally {
-            cerrar(); // 🔹 Cerrar la conexión
         }
-    }
     
 
     public void ejecutarDropTable(String nombreTabla) {
